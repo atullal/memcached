@@ -3126,7 +3126,19 @@ static void drive_machine(conn *c) {
             }
             break;
 
+
         case conn_parse_cmd:
+        {
+            // Adding a delay
+            const char* env = getenv("MEMCACHED_DELAY");
+            unsigned long delay_microseconds = env ? strtoul(env, NULL, 10) : 0; // Default to 1000 if variable is not set
+
+            struct timeval start, end;
+            gettimeofday(&start, NULL);
+            do {
+                gettimeofday(&end, NULL);
+            } while ((end.tv_sec - start.tv_sec) * 1000000 + end.tv_usec - start.tv_usec < delay_microseconds);
+
             c->noreply = false;
             if (c->try_read_command(c) == 0) {
                 /* we need more data! */
@@ -3137,7 +3149,7 @@ static void drive_machine(conn *c) {
                     conn_set_state(c, conn_waiting);
                 }
             }
-
+        }
             break;
 
         case conn_new_cmd:
